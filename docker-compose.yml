@@ -1,0 +1,42 @@
+version: "3.8"
+
+services:
+  php:
+    build: docker/php
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./:/var/www/katas
+    networks:
+      - katas
+
+  postgres:
+    image: postgres:14.9
+    volumes:
+      - ./docker/postgres:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: password
+      TZ: Europe/London
+    command: >
+      -c work_mem=256MB
+      -c maintenance_work_mem=256MB
+      -c max_wal_size=1GB
+    networks:
+      - katas
+
+  python:
+    build:
+      context: docker/python
+    volumes:
+      - ./python:/app
+    working_dir: /app
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+    entrypoint: ["bash"]
+
+networks:
+  katas:
+    driver: bridge
